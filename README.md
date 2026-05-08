@@ -299,7 +299,7 @@ password-tool/
 
 - [ ] Detect passwords based on dictionary words (dictionary attack simulation)
 - [ ] Check if a password has appeared in known data breaches via the [Have I Been Pwned API](https://haveibeenpwned.com/API/v3)
-- [ ] Flag forbidden patterns (e.g. sequences like `1234`, `aaaa`)
+- [ ] Flag forbidden patterns (e.g. sequences like `1234`)
 - [ ] Export analysis report as JSON
 
 
