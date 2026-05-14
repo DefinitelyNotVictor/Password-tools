@@ -12,6 +12,7 @@ import sys
 
 from Analyzer import analyze
 from Generator import GeneratorConfig, generate
+from Pwned import cmd_pwned
 
 # ANSI colors (only works if output is a terminal)
 USE_COLOR = sys.stdout.isatty()
@@ -125,6 +126,11 @@ def build_parser() -> argparse.ArgumentParser:
     p_gen.add_argument("--analyze", "-a", action="store_true",
                        help="Show analysis of the generated password")
     p_gen.set_defaults(func=cmd_generate)
+
+    # --- pwned ---
+    p_pwned = sub.add_parser("pwned", help="Check if a password appeared in data breaches (HIBP)")
+    p_pwned.add_argument("password", help="Password to check")
+    p_pwned.set_defaults(func=cmd_pwned)
 
     return parser
 
