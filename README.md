@@ -2,7 +2,6 @@
 
 [🇧🇷 Português](#português) | [🇺🇸 English](#english)
 
-
 <a name="português"></a>
 # 🇧🇷 Português
 
@@ -10,13 +9,12 @@ Analisador e gerador de senhas seguras em Python puro — sem dependências exte
 
 Projeto educacional de cibersegurança que demonstra conceitos de **entropia**, **força bruta** e **geração criptograficamente segura** de senhas.
 
-
 ## Funcionalidades
 
 - **Análise de senha**: score de força (0–6), entropia em bits, tempo estimado para quebrar por força bruta, critérios detalhados e sugestões de melhoria
 - **Gerador de senha**: usa `secrets.SystemRandom` (CSPRNG) com garantia de presença de cada tipo de caractere habilitado — letras, números e símbolos especiais
+- **Verificador de vazamentos**: integração com a API [Have I Been Pwned](https://haveibeenpwned.com) via k-Anonymity — a senha nunca trafega pela rede
 - **CLI completa** com saída colorida no terminal
-
 
 ## Instalação
 
@@ -51,11 +49,20 @@ python CLI.py generate --length 32 --no-symbols
 python CLI.py generate --length 24 --analyze
 ```
 
+### Verificar vazamentos
+
+```bash
+python CLI.py pwned "minhasenha123"
+```
+
+A saída mostra o resultado e exibe o hash SHA-1, o prefixo enviado à API e o sufixo verificado localmente — para ilustrar como o k-Anonymity funciona na prática.
+
 ## Uso como biblioteca
 
 ```python
 from Analyzer import analyze
 from Generator import GeneratorConfig, generate
+from pwned import check_pwned
 
 # Analisar
 result = analyze("Tr0ub4dor&3")
@@ -68,6 +75,12 @@ print(result.suggestions)         # lista de melhorias
 config = GeneratorConfig(length=24, symbols=True)
 senha = generate(config)
 print(senha)                       # ex: "xK#9mPqL!2vRn$WdQe@7Bc"
+
+# Verificar vazamentos
+result = check_pwned("minhasenha123")
+print(result.found)               # True ou False
+print(result.count)               # número de vazamentos
+print(result.message)             # mensagem formatada
 ```
 
 ## Como os cálculos funcionam
@@ -99,7 +112,7 @@ Assume um ataque de força bruta com **10 milhões de tentativas/segundo** (hard
 tempo = (2^entropia / 2) / 10_000_000
 ```
 
- Essa estimativa é conservadora para hashes rápidos (MD5, SHA-1). Algoritmos lentos como bcrypt/Argon2 aumentam o tempo por fatores de 10.000x ou mais.
+> Essa estimativa é conservadora para hashes rápidos (MD5, SHA-1). Algoritmos lentos como bcrypt/Argon2 aumentam o tempo por fatores de 10.000x ou mais.
 
 ### Por que `secrets` e não `random`?
 
@@ -118,6 +131,15 @@ Cobertura dos testes:
 - Comprimento e composição das senhas geradas
 - Validações de configuração
 - Unicidade das senhas geradas
+- Hashing SHA-1 e divisão do hash (pwned)
+- Parsing da resposta da API HIBP (pwned)
+- Comportamento com mock da API (pwned)
+
+Para rodar apenas os testes de integração com a API real:
+
+```bash
+python -m pytest tests/test_pwned.py -v -m integration
+```
 
 ## Estrutura do projeto
 
@@ -126,11 +148,12 @@ password-tool/
 ├── Analyzer.py              # Lógica de análise e entropia
 ├── Generator.py             # Geração segura com secrets
 ├── CLI.py                   # Interface de linha de comando
+├── pwned.py                 # Verificador de vazamentos (HIBP k-Anonymity)
 ├── tests/
-│   └── test_password_tool.py
+│   ├── test_password_tool.py
+│   └── test_pwned.py
 └── README.md
 ```
-
 
 ## Conceitos de segurança demonstrados
 
@@ -138,11 +161,12 @@ password-tool/
 - **Ataques de força bruta** e estimativa de tempo
 - **CSPRNG** (Cryptographically Secure Pseudo-Random Number Generator)
 - **Pool de caracteres** e sua influência na segurança
+- **k-Anonymity** aplicado à verificação de senhas sem expor dados à API
 
 ## Próximos passos sugeridos
 
 - [ ] Detectar senhas baseadas em palavras do dicionário (ataque de dicionário)
-- [ ] Verificar se a senha aparece em vazamentos via [Have I Been Pwned API](https://haveibeenpwned.com/API/v3)
+- [x] Verificar se a senha aparece em vazamentos via [Have I Been Pwned API](https://haveibeenpwned.com/API/v3)
 - [ ] Adicionar suporte a senhas com padrões proibidos (ex: sequências como `1234`)
 - [ ] Exportar relatório em JSON
 
@@ -165,13 +189,12 @@ A secure password analyzer and generator in pure Python — no external dependen
 
 An educational cybersecurity project demonstrating concepts of **entropy**, **brute-force attacks**, and **cryptographically secure password generation**.
 
-
 ## Features
 
 - **Password analysis**: strength score (0–6), entropy in bits, estimated brute-force crack time, detailed criteria checks, and improvement suggestions
 - **Password generator**: uses `secrets.SystemRandom` (CSPRNG) with guaranteed presence of each enabled character type — letters, digits, and special symbols
+- **Breach checker**: integrates with the [Have I Been Pwned](https://haveibeenpwned.com) API via k-Anonymity — the password never travels over the network
 - **Full CLI** with colored terminal output
-
 
 ## Installation
 
@@ -183,7 +206,6 @@ cd password-tool
 # To run the tests:
 pip install pytest
 ```
-
 
 ## CLI Usage
 
@@ -207,11 +229,20 @@ python CLI.py generate --length 32 --no-symbols
 python CLI.py generate --length 24 --analyze
 ```
 
+### Check for breaches
+
+```bash
+python CLI.py pwned "mypassword123"
+```
+
+The output shows the result and displays the SHA-1 hash, the prefix sent to the API, and the suffix checked locally — illustrating how k-Anonymity works in practice.
+
 ## Usage as a library
 
 ```python
 from Analyzer import analyze
 from Generator import GeneratorConfig, generate
+from pwned import check_pwned
 
 # Analyze
 result = analyze("Tr0ub4dor&3")
@@ -224,6 +255,12 @@ print(result.suggestions)         # list of improvement tips
 config = GeneratorConfig(length=24, symbols=True)
 password = generate(config)
 print(password)                   # e.g. "xK#9mPqL!2vRn$WdQe@7Bc"
+
+# Check for breaches
+result = check_pwned("mypassword123")
+print(result.found)               # True or False
+print(result.count)               # number of times seen in breaches
+print(result.message)             # formatted result message
 ```
 
 ## How the calculations work
@@ -274,7 +311,15 @@ Test coverage includes:
 - Generated password length and composition
 - Configuration validation
 - Password uniqueness
+- SHA-1 hashing and hash splitting (pwned)
+- HIBP API response parsing (pwned)
+- Mock-based API behavior tests (pwned)
 
+To run only the live integration tests against the real API:
+
+```bash
+python -m pytest tests/test_pwned.py -v -m integration
+```
 
 ## Project structure
 
@@ -283,8 +328,10 @@ password-tool/
 ├── Analyzer.py              # Analysis logic: entropy, scoring, crack time
 ├── Generator.py             # Secure generation using secrets
 ├── CLI.py                   # Command-line interface
+├── pwned.py                 # Breach checker (HIBP k-Anonymity)
 ├── tests/
-│   └── test_password_tool.py
+│   ├── test_password_tool.py
+│   └── test_pwned.py
 └── README.md
 ```
 
@@ -294,14 +341,14 @@ password-tool/
 - **Brute-force attacks** and time estimation
 - **CSPRNG** (Cryptographically Secure Pseudo-Random Number Generator)
 - **Character pool size** and its impact on security
+- **k-Anonymity** applied to password breach checking without exposing data to the API
 
 ## Suggested next steps
 
 - [ ] Detect passwords based on dictionary words (dictionary attack simulation)
-- [ ] Check if a password has appeared in known data breaches via the [Have I Been Pwned API](https://haveibeenpwned.com/API/v3)
-- [ ] Flag forbidden patterns (e.g. sequences like `1234`)
+- [x] Check if a password has appeared in known data breaches via the [Have I Been Pwned API](https://haveibeenpwned.com/API/v3)
+- [ ] Flag forbidden patterns (e.g. sequences like `1234`, `aaaa`)
 - [ ] Export analysis report as JSON
-
 
 ## References
 
@@ -309,5 +356,4 @@ password-tool/
 - [Python `secrets` module](https://docs.python.org/3/library/secrets.html)
 - [Have I Been Pwned](https://haveibeenpwned.com)
 
-
-[ Back to top](#-password-tool)
+[Back to top](#-password-tool)
