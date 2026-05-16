@@ -18,10 +18,8 @@ import urllib.request
 import urllib.error
 from dataclasses import dataclass
 
-
 HIBP_API_URL = "https://api.pwnedpasswords.com/range/{prefix}"
 REQUEST_TIMEOUT = 10  # seconds
-
 
 @dataclass
 class PwnedResult:
@@ -32,16 +30,13 @@ class PwnedResult:
     count: int                # how many times the password was found in breaches (0 if not found)
     message: str              # legible message summarizing the result for the user
 
-
 def sha1_hash(password: str) -> str:
     """Returns the SHA-1 hash of the password in uppercase hexadecimal format."""
     return hashlib.sha1(password.encode("utf-8")).hexdigest().upper()
 
-
 def split_hash(full_hash: str) -> tuple[str, str]:
     """Divides the full hash into a prefix (first 5 characters) and suffix (remaining characters)."""
     return full_hash[:5], full_hash[5:]
-
 
 def fetch_hash_range(prefix: str) -> str:
     """
@@ -65,7 +60,6 @@ def fetch_hash_range(prefix: str) -> str:
             f"Detail: {e.reason}"
         ) from e
 
-
 def parse_response(response_text: str, suffix: str) -> int:
     """
     Procura o sufixo do hash na resposta da API.
@@ -84,7 +78,6 @@ def parse_response(response_text: str, suffix: str) -> int:
         if api_suffix.strip().upper() == suffix.upper():
             return int(count.strip())
     return 0
-
 
 def check_pwned(password: str) -> PwnedResult:
     """
